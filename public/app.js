@@ -10,12 +10,14 @@ const SEVERITY = {
 };
 
 const FEATURES = [
-    ['Header keamanan', 'CSP, HSTS, X-Frame-Options, dan header lain yang melindungi dari XSS dan clickjacking.'],
+    ['Header keamanan', 'CSP, HSTS, X-Frame-Options, dan header lain pelindung dari XSS dan clickjacking.'],
+    ['Analisis CSP', 'Bukan cuma ada atau tidak: unsafe-inline, unsafe-eval, wildcard, dan direktif yang hilang.'],
     ['Sertifikat & TLS', 'Versi TLS, masa berlaku sertifikat, dan sertifikat self-signed.'],
-    ['Flag cookie', 'Apakah cookie memakai Secure, HttpOnly, dan SameSite.'],
-    ['File sensitif terekspos', 'File seperti .env, .git, dan backup yang tidak sengaja bisa diakses publik.'],
-    ['Kebocoran versi', 'Header dan tag yang membocorkan versi server atau CMS.'],
-    ['Konfigurasi CORS', 'Apakah server menerima permintaan lintas domain secara berbahaya.'],
+    ['File & direktori', 'File sensitif (.env, .git, backup) dan direktori terbuka, ditemukan dari petunjuk situs sendiri.'],
+    ['Rahasia di JavaScript', 'API key dan token yang tanpa sengaja ikut ter-bundle di kode frontend.'],
+    ['Metode HTTP', 'Metode berbahaya seperti TRACE (XST) dan metode tulis yang terbuka.'],
+    ['Keamanan email (DNS)', 'SPF dan DMARC untuk mencegah orang memalsukan email atas nama domainmu.'],
+    ['Cookie, CORS, SRI', 'Flag cookie, CORS berbahaya, resource pihak ketiga tanpa Subresource Integrity, dan mixed content.'],
 ];
 
 const $ = id => document.getElementById(id);

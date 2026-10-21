@@ -93,5 +93,33 @@ check('same-origin absolute kept', $same->invoke($checks, 'https://site.com/', '
 check('cross-origin dropped', $same->invoke($checks, 'https://site.com/', 'https://cdn.other.com/x.js') === null);
 check('mailto dropped', $same->invoke($checks, 'https://site.com/', 'mailto:a@b.com') === null);
 
+// --- advanced checks ---
+require_once __DIR__ . '/../src/Advanced.php';
+$adv = new Auditor\Advanced($http);
+
+$weakCsp = $adv->cspQuality(['content-security-policy' => "default-src 'self' 'unsafe-inline' https:"]);
+check('CSP unsafe-inline flagged', (bool) array_filter($weakCsp, fn($f) => $f['id'] === 'csp-unsafe-inline' && $f['severity'] === 'high'));
+check('CSP wildcard flagged', (bool) array_filter($weakCsp, fn($f) => $f['id'] === 'csp-wildcard'));
+$strongCsp = $adv->cspQuality(['content-security-policy' => "default-src 'none'; script-src 'self'; object-src 'none'; base-uri 'self'"]);
+check('strong CSP: no unsafe-inline finding', !array_filter($strongCsp, fn($f) => $f['id'] === 'csp-unsafe-inline'));
+check('no CSP header: no findings', $adv->cspQuality([]) === []);
+
+$res = $adv->pageResources('https', 'https://site.com/', '<script src="https://cdn.other.com/x.js"></script>');
+check('SRI missing flagged', (bool) array_filter($res, fn($f) => $f['id'] === 'sri-missing'));
+$res2 = $adv->pageResources('https', 'https://site.com/', '<img src="http://x.com/a.png">');
+check('mixed content flagged', (bool) array_filter($res2, fn($f) => $f['id'] === 'mixed-content'));
+$res3 = $adv->pageResources('http', 'http://site.com/', '<img src="http://x.com/a.png">');
+check('no mixed content on http page', !array_filter($res3, fn($f) => $f['id'] === 'mixed-content'));
+
+check('email skipped for IP', $adv->emailSecurity('127.0.0.1') === []);
+
+$mask = new ReflectionMethod($adv, 'maskSecret');
+$mask->setAccessible(true);
+check('secret masked', !str_contains($mask->invoke($adv, 'AKIAIOSFODNN7EXAMPLE'), 'IOSFODNN7'));
+$regd = new ReflectionMethod($adv, 'registrableDomain');
+$regd->setAccessible(true);
+check('registrable co.id', $regd->invoke($adv, 'www.bank.co.id') === 'bank.co.id');
+check('registrable .com', $regd->invoke($adv, 'a.b.example.com') === 'example.com');
+
 echo "\n$pass passed, $fail failed\n";
 exit($fail === 0 ? 0 : 1);

@@ -4,18 +4,21 @@ namespace Auditor;
 require_once __DIR__ . '/Http.php';
 require_once __DIR__ . '/Tls.php';
 require_once __DIR__ . '/Checks.php';
+require_once __DIR__ . '/Advanced.php';
 require_once __DIR__ . '/Grade.php';
 
 class Scanner
 {
     private Http $http;
     private Checks $checks;
+    private Advanced $advanced;
     private Tls $tls;
 
     public function __construct(bool $allowPrivate = false)
     {
         $this->http = new Http($allowPrivate);
         $this->checks = new Checks($this->http);
+        $this->advanced = new Advanced($this->http);
         $this->tls = new Tls();
     }
 
@@ -61,6 +64,12 @@ class Scanner
             $this->checks->sensitiveFiles($landing['finalUrl']),
             $this->checks->discovery($landing['finalUrl'], $landing['body']),
             $this->checks->cors($landing['finalUrl']),
+            $this->advanced->cspQuality($landing['headers']),
+            $this->advanced->httpMethods($landing['finalUrl']),
+            $this->advanced->securityTxt($landing['finalUrl']),
+            $this->advanced->pageResources($scheme, $landing['finalUrl'], $landing['body']),
+            $this->advanced->secretsInJs($landing['finalUrl'], $landing['body']),
+            $this->advanced->emailSecurity($host),
         );
 
         $grade = Grade::fromFindings($findings);

@@ -35,7 +35,12 @@ Semua pasif. SiteAudit nggak pernah mencoba login, menebak password, atau mengir
 | File sensitif | `.env`, `.git/config`, `phpinfo.php`, backup, `.htaccess`, `server-status`, dan lainnya |
 | Kebocoran versi | Header `Server` / `X-Powered-By`, tag generator, deteksi WordPress |
 | CORS | Origin yang dipantulkan sembarangan, wildcard dengan kredensial |
-| Penemuan direktori | Direktori situs ditemukan dari robots.txt, sitemap.xml, dan link di halaman (tanpa wordlist), lalu dicek apakah directory listing-nya terbuka |
+| Analisis CSP | Bukan sekadar ada: unsafe-inline, unsafe-eval, sumber wildcard, dan direktif penting yang hilang (object-src, base-uri) |
+| Penemuan direktori | Direktori situs ditemukan dari robots.txt, sitemap.xml, dan link di halaman (tanpa wordlist), lalu dicek directory listing-nya |
+| Rahasia di JavaScript | Memindai JS yang dimuat halaman untuk pola API key (AWS, Google, Stripe, Slack) dan token yang bocor, nilainya disensor |
+| Metode HTTP | Satu request OPTIONS: menandai TRACE (XST) dan metode tulis (PUT/DELETE) yang terbuka |
+| Keamanan email (DNS) | SPF dan DMARC lewat DNS, untuk mencegah pemalsuan email atas nama domain |
+| security.txt, SRI, mixed content | Kontak laporan kerentanan (RFC 9116), Subresource Integrity, dan resource http di halaman https |
 
 Deteksi file sensitif memakai baseline anti soft-404, lalu mencocokkan isi file, jadi tidak asal menandai halaman 200.
 
