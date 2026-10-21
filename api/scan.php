@@ -1,0 +1,78 @@
+<?php
+// JSON endpoint: POST { "url": "...", "consent": true } -> full report.
+// Keeps a short per-IP rate limit so the tool can't be used to hammer a target.
+
+require_once __DIR__ . '/../src/Scanner.php';
+
+use Auditor\Scanner;
+use Auditor\SsrfException;
+
+// Never let a PHP notice/warning leak into the JSON body and corrupt it.
+ini_set('display_errors', '0');
+ini_set('html_errors', '0');
+error_reporting(E_ALL);
+ob_start();
+
+header('Content-Type: application/json; charset=utf-8');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: no-referrer');
+
+function respond(int $code, array $body): never
+{
+    if (ob_get_level() > 0) {
+        ob_end_clean(); // drop any stray warning output before sending JSON
+    }
+    http_response_code($code);
+    echo json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+    respond(405, ['error' => 'Gunakan metode POST.']);
+}
+
+$raw = file_get_contents('php://input');
+$data = json_decode($raw, true);
+if (!is_array($data)) {
+    parse_str($raw, $data); // allow form posts too
+}
+
+$url = trim((string) ($data['url'] ?? ''));
+$consent = filter_var($data['consent'] ?? false, FILTER_VALIDATE_BOOL);
+
+if ($url === '') {
+    respond(400, ['error' => 'Masukkan alamat situs.']);
+}
+if (!$consent) {
+    respond(400, ['error' => 'Kamu harus menyatakan bahwa situs ini milikmu atau kamu punya izin untuk memindainya.']);
+}
+
+// Simple rate limit: 10 scans per IP per 10 minutes.
+$ip = $_SERVER['REMOTE_ADDR'] ?? 'cli';
+$bucket = sys_get_temp_dir() . '/wsa_rl_' . md5($ip);
+$now = time();
+$hits = array_filter(
+    is_file($bucket) ? (json_decode(file_get_contents($bucket), true) ?: []) : [],
+    fn($t) => $t > $now - 600
+);
+if (count($hits) >= 10) {
+    respond(429, ['error' => 'Terlalu banyak pemindaian. Coba lagi beberapa menit lagi.']);
+}
+$hits[] = $now;
+@file_put_contents($bucket, json_encode(array_values($hits)));
+
+// Local-dev escape hatch for scanning private targets (e.g. a test fixture on
+// localhost). Off by default. NEVER set AUDITOR_ALLOW_PRIVATE=1 on a public
+// deployment: it turns the scanner into an SSRF tool against your own network.
+$allowPrivate = getenv('AUDITOR_ALLOW_PRIVATE') === '1';
+
+try {
+    $report = (new Scanner($allowPrivate))->scan($url);
+    respond(200, $report);
+} catch (SsrfException $e) {
+    respond(422, ['error' => $e->getMessage()]);
+} catch (InvalidArgumentException $e) {
+    respond(400, ['error' => $e->getMessage()]);
+} catch (Throwable $e) {
+    respond(502, ['error' => 'Gagal memindai situs: ' . $e->getMessage()]);
+}

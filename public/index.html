@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SiteAudit - Cek Celah Keamanan Website</title>
+    <meta name="description" content="Masukkan alamat situsmu, dapatkan laporan nilai A-F berisi celah keamanan dan cara memperbaikinya. Pemeriksaan pasif, aman, open source.">
+    <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#f6f8fb" media="(prefers-color-scheme: light)">
+    <meta property="og:title" content="SiteAudit - Cek Celah Keamanan Website">
+    <meta property="og:description" content="Laporan nilai A-F berisi celah keamanan situsmu dan cara memperbaikinya. Gratis dan open source.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%232563eb' d='M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3z'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="nav">
+        <div class="container nav-inner">
+            <a class="brand" href="#top">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3z"/></svg>
+                </span>
+                <span class="brand-name">SiteAudit</span>
+            </a>
+            <a class="btn btn-ghost btn-sm" href="https://github.com/bramcps/web-security-auditor" target="_blank" rel="noopener">GitHub</a>
+        </div>
+    </header>
+
+    <main id="top">
+        <section class="hero">
+            <div class="container">
+                <span class="eyebrow">Pemeriksaan pasif &middot; Aman &middot; Open source</span>
+                <h1>Seberapa aman <span class="accent">website kamu?</span></h1>
+                <p class="lead">
+                    Masukkan alamat situsmu. Dalam beberapa detik kamu dapat laporan bernilai A sampai F,
+                    daftar celah keamanannya, dan cara memperbaiki tiap celah.
+                </p>
+
+                <form class="scan-form card" id="scan-form">
+                    <div class="field">
+                        <label class="visually-hidden" for="url">Alamat situs</label>
+                        <div class="input-row">
+                            <input type="text" id="url" name="url" inputmode="url" autocomplete="off"
+                                   autocapitalize="off" spellcheck="false" placeholder="contoh: situsku.com">
+                            <button class="btn btn-primary" id="scan-btn" type="submit">Periksa</button>
+                        </div>
+                    </div>
+                    <label class="consent">
+                        <input type="checkbox" id="consent" required>
+                        <span>Situs ini milik saya atau saya punya izin untuk memeriksanya.</span>
+                    </label>
+                    <p class="form-note">Hanya pemeriksaan pasif: beberapa request biasa, tanpa serangan. Alat ini memperkenalkan dirinya lewat User-Agent.</p>
+                </form>
+            </div>
+        </section>
+
+        <section class="container result-area" id="result-area" hidden></section>
+
+        <section class="section section-alt" id="how">
+            <div class="container">
+                <div class="section-head">
+                    <h2>Apa saja yang diperiksa</h2>
+                    <p>Semua dilakukan dengan request biasa, sama seperti browser membuka situsmu.</p>
+                </div>
+                <div class="feature-grid" id="feature-grid"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-inner">
+            <span>SiteAudit &middot; Open source (MIT) &copy; 2025 Mas Bram</span>
+            <a href="https://github.com/bramcps/web-security-auditor" target="_blank" rel="noopener">Kode di GitHub</a>
+        </div>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+</body>
+</html>
