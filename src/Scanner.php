@@ -56,20 +56,22 @@ class Scanner
             ? $this->tls->inspect($host, $landing['ip'], parse_url($landing['finalUrl'], PHP_URL_PORT) ?: 443)
             : ['ok' => false, 'error' => 'bukan https'];
 
+        // Each check runs in isolation: if one fails on an odd site, the rest
+        // still produce a report instead of the whole scan dying.
         $findings = array_merge(
-            $this->checks->tls($scheme, $tlsInfo),
-            $this->checks->securityHeaders($landing['headers']),
-            $this->checks->cookies($landing['headers']),
-            $this->checks->infoDisclosure($landing['headers'], $landing['body']),
-            $this->checks->sensitiveFiles($landing['finalUrl']),
-            $this->checks->discovery($landing['finalUrl'], $landing['body']),
-            $this->checks->cors($landing['finalUrl']),
-            $this->advanced->cspQuality($landing['headers']),
-            $this->advanced->httpMethods($landing['finalUrl']),
-            $this->advanced->securityTxt($landing['finalUrl']),
-            $this->advanced->pageResources($scheme, $landing['finalUrl'], $landing['body']),
-            $this->advanced->secretsInJs($landing['finalUrl'], $landing['body']),
-            $this->advanced->emailSecurity($host),
+            $this->safe(fn() => $this->checks->tls($scheme, $tlsInfo)),
+            $this->safe(fn() => $this->checks->securityHeaders($landing['headers'])),
+            $this->safe(fn() => $this->checks->cookies($landing['headers'])),
+            $this->safe(fn() => $this->checks->infoDisclosure($landing['headers'], $landing['body'])),
+            $this->safe(fn() => $this->checks->sensitiveFiles($landing['finalUrl'])),
+            $this->safe(fn() => $this->checks->discovery($landing['finalUrl'], $landing['body'])),
+            $this->safe(fn() => $this->checks->cors($landing['finalUrl'])),
+            $this->safe(fn() => $this->advanced->cspQuality($landing['headers'])),
+            $this->safe(fn() => $this->advanced->httpMethods($landing['finalUrl'])),
+            $this->safe(fn() => $this->advanced->securityTxt($landing['finalUrl'])),
+            $this->safe(fn() => $this->advanced->pageResources($scheme, $landing['finalUrl'], $landing['body'])),
+            $this->safe(fn() => $this->advanced->secretsInJs($landing['finalUrl'], $landing['body'])),
+            $this->safe(fn() => $this->advanced->emailSecurity($host)),
         );
 
         $grade = Grade::fromFindings($findings);
@@ -89,6 +91,16 @@ class Scanner
             'scanned_at' => gmdate('c'),
             'duration_ms' => (int) round((microtime(true) - $started) * 1000),
         ];
+    }
+
+    /** Run one check, swallowing any failure so it can't abort the whole scan. */
+    private function safe(callable $check): array
+    {
+        try {
+            return $check();
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 
     private function summarize(array $findings): array

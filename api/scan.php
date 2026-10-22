@@ -13,6 +13,21 @@ ini_set('html_errors', '0');
 error_reporting(E_ALL);
 ob_start();
 
+// If a fatal error ends the request, still return JSON (never an empty body).
+register_shutdown_function(function () {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_RECOVERABLE_ERROR], true)) {
+        if (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        if (!headers_sent()) {
+            http_response_code(500);
+            header('Content-Type: application/json; charset=utf-8');
+        }
+        echo json_encode(['error' => 'Terjadi kesalahan internal saat memindai. Coba situs lain atau laporkan di GitHub.']);
+    }
+});
+
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: no-referrer');
