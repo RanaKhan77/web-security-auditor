@@ -47,8 +47,22 @@ function observeReveals(root = document) {
 document.addEventListener('DOMContentLoaded', () => {
     renderFeatures();
     observeReveals();
+    initTheme();
     $('scan-form').addEventListener('submit', onSubmit);
 });
+
+function initTheme() {
+    const html = document.documentElement;
+    const btn = $('theme-toggle');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+        const dark = (html.getAttribute('data-theme') ||
+            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
+        const next = dark ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('sa-theme', next); } catch (e) {}
+    });
+}
 
 // Count a number up smoothly (respects reduced motion).
 function countUp(el, to, suffix = '', ms = 900) {
