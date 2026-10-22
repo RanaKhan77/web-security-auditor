@@ -200,12 +200,22 @@ class Http
         if (!$ips) {
             throw new SsrfException("Nama domain tidak bisa di-resolve: $host");
         }
-        foreach ($ips as $ip) {
-            if (!$this->allowPrivate && !$this->isPublicIp($ip)) {
-                throw new SsrfException("Target menunjuk ke alamat internal ($ip). Pemindaian dibatalkan demi keamanan.");
-            }
+
+        if ($this->allowPrivate) {
+            return $this->pinned[$host] = $ips[0];
         }
-        return $this->pinned[$host] = $ips[0];
+
+        // Keep only public IPs, then connect to one of those. A site that also
+        // has a private/ULA address (e.g. an fd00:: IPv6) is still fine as long
+        // as it has a public address we can pin to. We only refuse a target that
+        // resolves ONLY to internal addresses.
+        $public = array_values(array_filter($ips, fn($ip) => $this->isPublicIp($ip)));
+        if (!$public) {
+            throw new SsrfException("Situs ini hanya mengarah ke alamat internal. Pemindaian dibatalkan demi keamanan.");
+        }
+        // prefer a public IPv4 (simplest to pin), else the first public address
+        $ipv4 = array_values(array_filter($public, fn($ip) => filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)));
+        return $this->pinned[$host] = $ipv4[0] ?? $public[0];
     }
 
     private function isPublicIp(string $ip): bool
