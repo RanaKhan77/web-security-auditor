@@ -48,6 +48,29 @@ Deteksi file sensitif memakai baseline anti soft-404, lalu mencocokkan isi file,
 
 Penemuan direktori sengaja **tidak memakai wordlist**: tool hanya memeriksa path yang situsmu sendiri sebutkan (di robots.txt, sitemap.xml, dan link halaman), jadi tetap pasif dan sopan ke server.
 
+## Mode aktif (uji ofensif, opsional)
+
+Secara default semua pemeriksaan **pasif**. Ada mode aktif opsional yang benar-benar mengirim payload uji untuk membuktikan celah, seperti yang dilakukan di pentest:
+
+| Uji | Cara kerja | Bukti |
+|---|---|---|
+| Reflected XSS | Menyisipkan penanda unik berisi karakter spesial ke parameter, lihat apakah dipantulkan tanpa di-escape | Penanda yang muncul mentah di HTML |
+| SQL injection | Menambahkan satu petik ke parameter, deteksi pesan error database | Potongan error SQL dari server |
+| Open redirect | Mengisi parameter redirect dengan URL canary, cek apakah server mengarahkan ke sana | Header Location ke domain canary |
+
+Payload-nya **deteksi, bukan eksploitasi**: penanda dan pemicu error, bukan kode perusak atau pencuri data.
+
+Mode ini **dikunci ganda** supaya tidak disalahgunakan:
+1. Operator harus menyalakannya di server: jalankan dengan `AUDITOR_ACTIVE=1`.
+2. Pengguna harus mencentang pernyataan izin kedua untuk tiap scan.
+
+```bash
+# aktifkan mode aktif (hanya untuk target yang kamu miliki / diizinkan)
+AUDITOR_ACTIVE=1 php -S localhost:8000 router.php
+```
+
+> Jalankan uji aktif **hanya** pada sistem milikmu sendiri atau yang kamu punya izin tertulis. Menguji sistem orang lain tanpa izin melanggar hukum.
+
 ## Cara pakai
 
 Butuh PHP 8.1+ dengan ekstensi **openssl** (wajib, untuk situs https) dan sebaiknya **curl**.
@@ -109,7 +132,7 @@ Tambahan pemeriksaan pasif baru sangat diterima: path sensitif lain, header baru
 
 ## English
 
-**SiteAudit** is a passive web security auditor with a PHP backend. Enter your site's URL and get an A-F report of its security issues with a concrete fix for each one: missing security headers, exposed `.env` / `.git`, weak TLS, insecure cookies, version disclosure, and risky CORS. Every check is passive (plain requests, no attacks), the scanner identifies itself, and it refuses private/loopback/metadata targets to avoid SSRF. It also discovers your site's directories from its own robots.txt, sitemap, and page links (no wordlist, no brute force), flags open directory listing, and backs every finding with evidence (redacted file snippets, listing titles, leaked paths). Built for sites you own or are authorized to test. Dependency-free; run with `php -S localhost:8000 router.php`.
+**SiteAudit** is a passive web security auditor with a PHP backend. Enter your site's URL and get an A-F report of its security issues with a concrete fix for each one: missing security headers, exposed `.env` / `.git`, weak TLS, insecure cookies, version disclosure, and risky CORS. Every check is passive (plain requests, no attacks), the scanner identifies itself, and it refuses private/loopback/metadata targets to avoid SSRF. It also discovers your site's directories from its own robots.txt, sitemap, and page links (no wordlist, no brute force), flags open directory listing, and backs every finding with evidence (redacted file snippets, listing titles, leaked paths). An optional active mode (double-gated behind an env flag and a per-scan opt-in) adds non-destructive detection probes for reflected XSS, SQL injection and open redirect. Built for sites you own or are authorized to test. Dependency-free; run with `php -S localhost:8000 router.php`.
 
 ## Lisensi
 

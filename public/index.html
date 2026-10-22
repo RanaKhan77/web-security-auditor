@@ -51,7 +51,16 @@
                         <input type="checkbox" id="consent" required>
                         <span>Situs ini milik saya atau saya punya izin untuk memeriksanya.</span>
                     </label>
-                    <p class="form-note">Hanya pemeriksaan pasif: beberapa request biasa, tanpa serangan. Alat ini memperkenalkan dirinya lewat User-Agent.</p>
+                    <p class="form-note">Secara default hanya pemeriksaan pasif: beberapa request biasa, tanpa serangan. Alat ini memperkenalkan dirinya lewat User-Agent.</p>
+
+                    <details class="active-box">
+                        <summary>Mode aktif (lanjutan)</summary>
+                        <p class="active-warn">Mode aktif mengirim payload uji (reflected XSS, SQL injection, open redirect). <strong>Hanya untuk target yang kamu miliki atau kamu diberi izin menguji.</strong> Perlu diaktifkan di server dengan <code>AUDITOR_ACTIVE=1</code>.</p>
+                        <label class="consent">
+                            <input type="checkbox" id="active">
+                            <span>Saya berwenang melakukan uji aktif pada target ini.</span>
+                        </label>
+                    </details>
                 </form>
             </div>
         </section>

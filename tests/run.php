@@ -121,5 +121,21 @@ $regd->setAccessible(true);
 check('registrable co.id', $regd->invoke($adv, 'www.bank.co.id') === 'bank.co.id');
 check('registrable .com', $regd->invoke($adv, 'a.b.example.com') === 'example.com');
 
+// --- active checks (helpers, offline) ---
+require_once __DIR__ . '/../src/Active.php';
+$act = new Auditor\Active($http);
+$dp = new ReflectionMethod($act, 'discoverParams');
+$dp->setAccessible(true);
+$found = $dp->invoke($act, 'https://site.com/', '<a href="/x?token=1&ref=2">x</a><input name="email">');
+check('discovers link params', in_array('token', $found, true) && in_array('ref', $found, true));
+check('discovers form field', in_array('email', $found, true));
+check('includes common params', in_array('q', $found, true));
+check('param count bounded', count($found) <= 10);
+
+$wp = new ReflectionMethod($act, 'withParam');
+$wp->setAccessible(true);
+check('withParam adds query', $wp->invoke($act, 'https://s.com/', 'q', 'a b') === 'https://s.com/?q=a%20b');
+check('withParam appends with &', str_contains($wp->invoke($act, 'https://s.com/?x=1', 'q', 'v'), '?x=1&q=v'));
+
 echo "\n$pass passed, $fail failed\n";
 exit($fail === 0 ? 0 : 1);

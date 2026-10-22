@@ -46,6 +46,7 @@ async function onSubmit(e) {
     const url = $('url').value.trim();
     if (!url) return showToast('Masukkan alamat situs', true);
     if (!$('consent').checked) return showToast('Centang dulu pernyataan izinnya', true);
+    const active = $('active') && $('active').checked;
 
     const btn = $('scan-btn');
     btn.disabled = true;
@@ -56,7 +57,7 @@ async function onSubmit(e) {
         const res = await fetch('api/scan', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url, consent: true }),
+            body: JSON.stringify({ url, consent: true, active }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Gagal memindai');

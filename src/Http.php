@@ -30,14 +30,14 @@ class Http
      * Fetch a URL safely. Returns [status, headers (lower-cased keys), body, finalUrl, ip].
      * @param array<string,string> $extraHeaders
      */
-    public function fetch(string $url, string $method = 'GET', array $extraHeaders = []): array
+    public function fetch(string $url, string $method = 'GET', array $extraHeaders = [], bool $followRedirects = true): array
     {
         $redirects = 0;
         while (true) {
             $ip = $this->resolvePublicIp($url);
             $result = $this->request($url, $ip, $method, $extraHeaders);
 
-            if ($result['status'] >= 300 && $result['status'] < 400 && isset($result['headers']['location']) && $redirects < self::MAX_REDIRECTS) {
+            if ($followRedirects && $result['status'] >= 300 && $result['status'] < 400 && isset($result['headers']['location']) && $redirects < self::MAX_REDIRECTS) {
                 $url = $this->absoluteUrl($url, $result['headers']['location']);
                 $redirects++;
                 $method = 'GET';

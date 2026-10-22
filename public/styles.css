@@ -250,3 +250,10 @@ a { color: var(--brand); }
     background: var(--surface-2); border: 1px solid var(--border);
     font-family: var(--mono); font-size: .82rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
 }
+
+.active-box { margin-top: 12px; border: 1px solid var(--border); border-radius: 10px; }
+.active-box summary { padding: 10px 14px; cursor: pointer; font-weight: 700; font-size: .9rem; color: var(--high); }
+.active-box[open] summary { border-bottom: 1px solid var(--border); }
+.active-warn { padding: 12px 14px; font-size: .86rem; color: var(--muted); }
+.active-warn code { font-family: var(--mono); font-size: .85em; padding: 1px 5px; border-radius: 5px; background: var(--surface-2); }
+.active-box .consent { padding: 0 14px 14px; margin-top: 0; }

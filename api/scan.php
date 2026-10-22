@@ -58,12 +58,20 @@ if (!is_array($data)) {
 
 $url = trim((string) ($data['url'] ?? ''));
 $consent = filter_var($data['consent'] ?? false, FILTER_VALIDATE_BOOL);
+$activeRequested = filter_var($data['active'] ?? false, FILTER_VALIDATE_BOOL);
 
 if ($url === '') {
     respond(400, ['error' => 'Masukkan alamat situs.']);
 }
 if (!$consent) {
     respond(400, ['error' => 'Kamu harus menyatakan bahwa situs ini milikmu atau kamu punya izin untuk memindainya.']);
+}
+
+// Active mode (sends test payloads) is double-gated: the operator must enable it
+// on the server, AND the user must opt in for this scan. Off everywhere else.
+$activeMode = $activeRequested && getenv('AUDITOR_ACTIVE') === '1';
+if ($activeRequested && getenv('AUDITOR_ACTIVE') !== '1') {
+    respond(400, ['error' => 'Mode aktif tidak diaktifkan di server ini. Jalankan server dengan AUDITOR_ACTIVE=1 untuk mengizinkannya (hanya untuk target yang kamu punya izin).']);
 }
 
 // Simple rate limit: 10 scans per IP per 10 minutes.
@@ -90,7 +98,7 @@ $allowPrivate = getenv('AUDITOR_ALLOW_PRIVATE') === '1';
 @set_time_limit(120);
 
 try {
-    $report = (new Scanner($allowPrivate))->scan($url);
+    $report = (new Scanner($allowPrivate, $activeMode))->scan($url);
     respond(200, $report);
 } catch (SsrfException $e) {
     respond(422, ['error' => $e->getMessage()]);
