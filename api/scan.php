@@ -24,7 +24,11 @@ register_shutdown_function(function () {
             http_response_code(500);
             header('Content-Type: application/json; charset=utf-8');
         }
-        echo json_encode(['error' => 'Terjadi kesalahan internal saat memindai. Coba situs lain atau laporkan di GitHub.']);
+        $msg = 'Terjadi kesalahan internal saat memindai. Coba situs lain atau laporkan di GitHub.';
+        if (getenv('AUDITOR_DEBUG') === '1') {
+            $msg .= ' [debug] ' . $e['message'] . ' @ ' . basename($e['file']) . ':' . $e['line'];
+        }
+        echo json_encode(['error' => $msg]);
     }
 });
 
@@ -89,5 +93,9 @@ try {
 } catch (InvalidArgumentException $e) {
     respond(400, ['error' => $e->getMessage()]);
 } catch (Throwable $e) {
-    respond(502, ['error' => 'Gagal memindai situs: ' . $e->getMessage()]);
+    $detail = $e->getMessage();
+    if (getenv('AUDITOR_DEBUG') === '1') {
+        $detail .= ' @ ' . basename($e->getFile()) . ':' . $e->getLine();
+    }
+    respond(502, ['error' => 'Gagal memindai situs: ' . $detail]);
 }
