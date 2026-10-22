@@ -10,7 +10,7 @@ class SsrfException extends \RuntimeException {}
 class Http
 {
     const USER_AGENT = 'CyberShield-Audit/1.0 (+https://github.com/bramcps/web-security-auditor; passive scanner)';
-    const TIMEOUT = 12;
+    const TIMEOUT = 8;
     const MAX_REDIRECTS = 4;
     const MAX_BODY = 512000; // 500 KB is plenty for header/signature checks
 

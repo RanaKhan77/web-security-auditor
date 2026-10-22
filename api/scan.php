@@ -85,6 +85,10 @@ $hits[] = $now;
 // deployment: it turns the scanner into an SSRF tool against your own network.
 $allowPrivate = getenv('AUDITOR_ALLOW_PRIVATE') === '1';
 
+// A thorough scan makes many sequential requests; give it room past the
+// default 30s cap that some PHP setups (e.g. Windows) apply to the dev server.
+@set_time_limit(120);
+
 try {
     $report = (new Scanner($allowPrivate))->scan($url);
     respond(200, $report);

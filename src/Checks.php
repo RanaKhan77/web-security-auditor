@@ -298,7 +298,7 @@ class Checks
                 $dirs[$dir] = true;
             }
         }
-        $dirs = array_slice(array_keys($dirs), 0, 25); // stay bounded and polite
+        $dirs = array_slice(array_keys($dirs), 0, 12); // stay bounded and polite
 
         $listing = [];
         foreach ($dirs as $dir) {

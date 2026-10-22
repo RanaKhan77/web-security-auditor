@@ -158,7 +158,7 @@ class Advanced
                 }
             }
         }
-        $sources = array_slice(array_unique($sources), 0, 6);
+        $sources = array_slice(array_unique($sources), 0, 4);
 
         $patterns = [
             'AWS access key' => '/\bAKIA[0-9A-Z]{16}\b/',
