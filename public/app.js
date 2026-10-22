@@ -21,17 +21,54 @@ const FEATURES = [
 ];
 
 const $ = id => document.getElementById(id);
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Reveal elements as they scroll into view.
+const revealObserver = 'IntersectionObserver' in window
+    ? new IntersectionObserver((entries, obs) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.classList.add('in');
+                obs.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' })
+    : null;
+
+function observeReveals(root = document) {
+    const els = root.querySelectorAll('.reveal:not(.in)');
+    if (!revealObserver) {
+        els.forEach(el => el.classList.add('in')); // old browsers: just show them
+        return;
+    }
+    els.forEach(el => revealObserver.observe(el));
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     renderFeatures();
+    observeReveals();
     $('scan-form').addEventListener('submit', onSubmit);
 });
 
+// Count a number up smoothly (respects reduced motion).
+function countUp(el, to, suffix = '', ms = 900) {
+    if (reduceMotion) { el.textContent = to + suffix; return; }
+    const start = performance.now();
+    const step = now => {
+        const t = Math.min(1, (now - start) / ms);
+        const eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(to * eased) + suffix;
+        if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+}
+
 function renderFeatures() {
     const grid = $('feature-grid');
-    FEATURES.forEach(([title, desc]) => {
+    FEATURES.forEach(([title, desc], i) => {
         const card = document.createElement('article');
-        card.className = 'feature card';
+        card.className = 'feature card reveal';
+        card.style.setProperty('--i', i);
         const h = document.createElement('h3');
         h.textContent = title;
         const p = document.createElement('p');
@@ -105,13 +142,14 @@ function renderReport(report) {
         .map(k => `<span class="count-chip sev-${k}">${s[k]} ${SEVERITY[k].label}</span>`)
         .join('');
 
+    const mode = report.active_mode ? 'pemeriksaan pasif + aktif' : 'pemeriksaan pasif';
     area.hidden = false;
     area.innerHTML = `
       <div class="report" id="report">
         <div class="report-head card grade-${g.letter}">
           <div class="grade-badge">
             <span class="grade-letter">${g.letter}</span>
-            <span class="grade-score">${g.score}/100</span>
+            <span class="grade-score"><span class="score-n">0</span>/100</span>
           </div>
           <div class="report-meta">
             <h2>${escape(report.target.host)}</h2>
@@ -135,15 +173,21 @@ function renderReport(report) {
 
         <p class="report-foot muted">
           Diperiksa ${new Date(report.scanned_at).toLocaleString('id-ID')} &middot;
-          ${report.duration_ms} ms &middot; pemeriksaan pasif oleh SiteAudit
+          ${report.duration_ms} ms &middot; ${mode} oleh SiteAudit
         </p>
       </div>`;
+
+    requestAnimationFrame(() => {
+        const n = area.querySelector('.score-n');
+        if (n) countUp(n, g.score);
+        observeReveals(area);
+    });
     area.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function findingCard(f) {
+function findingCard(f, i) {
     const sev = SEVERITY[f.severity];
-    return `<article class="finding sev-${f.severity}">
+    return `<article class="finding rise sev-${f.severity}" style="--i:${i}">
         <div class="finding-head">
           <span class="sev-tag sev-${f.severity}">${sev.label}</span>
           <h4>${escape(f.title)}</h4>
