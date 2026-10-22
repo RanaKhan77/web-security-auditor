@@ -1,12 +1,12 @@
 'use strict';
 
 const SEVERITY = {
-    critical: { label: 'Kritis', order: 0 },
-    high: { label: 'Tinggi', order: 1 },
-    medium: { label: 'Sedang', order: 2 },
-    low: { label: 'Rendah', order: 3 },
-    info: { label: 'Info', order: 4 },
-    ok: { label: 'Aman', order: 5 },
+    critical: { label: 'Kritis', code: 'CRIT', order: 0 },
+    high: { label: 'Tinggi', code: 'HIGH', order: 1 },
+    medium: { label: 'Sedang', code: 'MED', order: 2 },
+    low: { label: 'Rendah', code: 'LOW', order: 3 },
+    info: { label: 'Info', code: 'INFO', order: 4 },
+    ok: { label: 'Aman', code: 'OK', order: 5 },
 };
 
 const FEATURES = [
@@ -188,13 +188,15 @@ function renderReport(report) {
 function findingCard(f, i) {
     const sev = SEVERITY[f.severity];
     return `<article class="finding rise sev-${f.severity}" style="--i:${i}">
-        <div class="finding-head">
-          <span class="sev-tag sev-${f.severity}">${sev.label}</span>
-          <h4>${escape(f.title)}</h4>
+        <div class="finding-row">
+          <span class="sev-code">${sev.code}</span>
+          <div class="finding-body">
+            <h4 class="finding-title">${escape(f.title)}</h4>
+            <p class="finding-detail">${escape(f.detail)}</p>
+            ${f.evidence ? `<details class="finding-evidence"><summary>$ bukti</summary><pre>${escape(f.evidence)}</pre></details>` : ''}
+            ${f.fix ? `<p class="finding-fix"><span class="fix-tag">FIX</span> ${escape(f.fix)}</p>` : ''}
+          </div>
         </div>
-        <p class="finding-detail">${escape(f.detail)}</p>
-        ${f.evidence ? `<details class="finding-evidence"><summary>Bukti</summary><pre>${escape(f.evidence)}</pre></details>` : ''}
-        ${f.fix ? `<div class="finding-fix"><strong>Perbaikan:</strong> ${escape(f.fix)}</div>` : ''}
       </article>`;
 }
 
