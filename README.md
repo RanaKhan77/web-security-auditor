@@ -149,4 +149,4 @@ Yang paling berguna: **pola pemeriksaan pasif baru**, misalnya path sensitif lai
 
 ## Lisensi
 
-[MIT](LICENSE) © 2025 Mas Bram. Kalau berguna, kasih bintang di GitHub.
+[MIT](LICENSE) © 2026 Mas Bram. Kalau berguna, kasih bintang di GitHub.
